@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}Для МУИВ · Science Events{% endblock %}
+
+{% block content %}
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title" style="font-size:22px;">Для МУИВ: проверка “фокусного” мероприятия</div>
+        <div class="card-subtitle">
+          Быстрая проверка: относится ли мероприятие к фокусным для университета — и почему сервис так решил.
+        </div>
+      </div>
+      <div class="inline">
+        <span class="badge">Прозрачно</span>
+        <span class="badge badge-success">С объяснением</span>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <div class="small">
+        Если знаете <span class="mono">event_id</span> — лучше использовать его (обычно точнее). Если ID нет — проверьте по названию/городу/площадке.
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-2" style="margin-top:18px;">
+    <!-- INPUTS -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Проверить мероприятие</div>
+          <div class="card-subtitle">Можно по ID или по тексту.</div>
+        </div>
+      </div>
+
+      <div class="grid" style="gap:14px;">
+        <!-- BY ID -->
+        <form class="form"
+              id="form-focus-id"
+              data-kind="focus"
+              data-api="/api/focus/check_by_id"
+              data-target="#focusResult"
+              data-raw-target="#focusRaw">
+
+          <div class="field">
+            <label>event_id</label>
+            <input class="input" name="event_id" placeholder="например 9448" />
+            <div class="help">Если указан ID, сервер сам поднимет нужные поля события.</div>
+          </div>
+
+          <div class="card-footer">
+            <button class="btn btn-primary" type="submit">Проверить по ID</button>
+            <button class="btn" type="reset">Сбросить</button>
+          </div>
+        </form>
+
+        <!-- BY TEXT -->
+        <form class="form"
+              id="form-focus-text"
+              data-kind="focus"
+              data-api="/api/focus/check"
+              data-target="#focusResult"
+              data-raw-target="#focusRaw">
+
+          <div class="field">
+            <label>Название мероприятия</label>
+            <input class="input" name="title_clean" placeholder="например Виттевские чтения - 2026" />
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label>Город</label>
+              <input class="input" name="city" placeholder="например Москва, Россия" />
+            </div>
+            <div class="field">
+              <label>Площадка / вуз</label>
+              <input class="input" name="venue" placeholder="например МУ имени С. Ю. Витте" />
+            </div>
+          </div>
+
+          <div class="card-footer">
+            <button class="btn btn-primary" type="submit">Проверить по тексту</button>
+            <button class="btn" type="reset">Сбросить</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- RESULT -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Результат</div>
+          <div class="card-subtitle">Да/нет + причина (какие признаки сработали).</div>
+        </div>
+      </div>
+
+      <div id="focusResult" class="card-body">
+        <div class="small">Отправьте одну из форм слева — сюда придёт ответ.</div>
+      </div>
+
+      <div class="card-footer">
+        <button class="btn btn-ghost"
+                type="button"
+                data-action="assistant"
+                data-api="/api/assistant/report"
+                data-task="focus_check"
+                data-context-source="#focusResult"
+                data-target="#assistantOutFocus">
+          Пояснить простыми словами
+        </button>
+        <span class="small">Ассистент объяснит результат 1–2 абзацами.</span>
+      </div>
+
+      <div id="assistantOutFocus" class="card-body">
+        <div class="small">Тут появится пояснение ассистента.</div>
+      </div>
+
+      <details class="card" style="margin-top:12px;">
+        <summary class="mono" style="cursor:pointer; user-select:none;">Технические данные (по желанию)</summary>
+        <pre id="focusRaw" style="white-space:pre-wrap;">—</pre>
+      </details>
+    </div>
+  </div>
+
+{% endblock %}

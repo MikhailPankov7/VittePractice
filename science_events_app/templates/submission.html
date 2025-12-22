@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% block title %}Оценить заявку · Science Events{% endblock %}
+
+{% block content %}
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title" style="font-size:22px;">Оценить шанс принятия заявки</div>
+        <div class="card-subtitle">
+          Введите только то, что знаете (оценки, число рецензий, уверенность). Неизвестные поля можно оставить пустыми.
+        </div>
+      </div>
+      <div class="inline">
+        <span class="badge">С объяснением</span>
+        <span class="badge badge-warning">Ориентир, не гарантия</span>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <div class="result">
+        <div class="badge badge-warning">Важно</div>
+        <div class="small" style="margin-top:10px;">
+          Чем больше реальных рецензий и оценок — тем надёжнее оценка. При “пустых” данных точность ниже.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-2" style="margin-top:18px;">
+    <!-- FORM -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Данные для расчёта</div>
+          <div class="card-subtitle">Минимальный набор + необязательный контекст события.</div>
+        </div>
+      </div>
+
+      <form class="form"
+            id="form-submission"
+            data-kind="submission"
+            data-api="/api/submission/predict"
+            data-target="#submissionResult"
+            data-raw-target="#submissionRaw">
+
+        <div class="form-row">
+          <div class="field">
+            <label>Число рецензий</label>
+            <input class="input" name="n_reviews" data-type="number" placeholder="например 2" />
+            <div class="help">Если не знаете — оставьте пустым.</div>
+          </div>
+          <div class="field">
+            <label>Средняя оценка</label>
+            <input class="input" name="score_mean" data-type="number" placeholder="например 7.5" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>Средняя уверенность рецензентов</label>
+            <input class="input" name="conf_mean" data-type="number" placeholder="например 4.0" />
+          </div>
+          <div class="field">
+            <label>Разброс оценок (если знаете)</label>
+            <input class="input" name="score_std" data-type="number" placeholder="например 0.7" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>Роль участника</label>
+            <select name="role">
+              <option value="">—</option>
+              <option value="bachelor">bachelor</option>
+              <option value="master">master</option>
+              <option value="phd">phd</option>
+              <option value="teacher">teacher</option>
+              <option value="industry">industry</option>
+              <option value="other">other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Университет (опционально)</label>
+            <input class="input" name="university" placeholder="например МГУ / КФУ / РУДН" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>Страна (опционально)</label>
+            <input class="input" name="country" placeholder="например Россия" />
+          </div>
+          <div class="field">
+            <label>Город (опционально)</label>
+            <input class="input" name="city" placeholder="например Москва, Россия" />
+          </div>
+        </div>
+
+        <details class="card" style="padding:14px; margin:0;">
+          <summary class="mono" style="cursor:pointer; user-select:none;">
+            Контекст события (необязательно)
+          </summary>
+
+          <div class="card-body">
+            <div class="form-row">
+              <div class="field">
+                <label>Площадка / вуз</label>
+                <input class="input" name="venue" placeholder="например МГУ" />
+              </div>
+              <div class="field">
+                <label>Формат</label>
+                <select name="format">
+                  <option value="">—</option>
+                  <option value="remote_or_hybrid">remote_or_hybrid</option>
+                  <option value="onsite_or_hybrid">onsite_or_hybrid</option>
+                  <option value="onsite">onsite</option>
+                  <option value="remote">remote</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="field">
+                <label>Онлайн?</label>
+                <select name="is_online_flag" data-type="number">
+                  <option value="">—</option>
+                  <option value="1">Да</option>
+                  <option value="0">Нет</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Название события (опционально)</label>
+                <input class="input" name="title_clean" placeholder="например Виттевские чтения - 2026" />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="field">
+                <label>Бесплатно?</label>
+                <select name="cost_is_free" data-type="number">
+                  <option value="">—</option>
+                  <option value="1">Да</option>
+                  <option value="0">Нет</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Упоминается взнос?</label>
+                <select name="cost_mentions_fee" data-type="number">
+                  <option value="">—</option>
+                  <option value="1">Да</option>
+                  <option value="0">Нет</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="field">
+                <label>Месяц события (1–12)</label>
+                <input class="input" name="event_month" data-type="number" placeholder="например 4" />
+              </div>
+              <div class="field">
+                <label>День недели старта (0–6)</label>
+                <input class="input" name="event_dow" data-type="number" placeholder="например 1" />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="field">
+                <label>Длина описания (если знаете)</label>
+                <input class="input" name="description_len" data-type="number" placeholder="например 1200" />
+              </div>
+              <div class="field">
+                <label>Секция/трек (опционально)</label>
+                <input class="input" name="track_title" placeholder="например AI / ML / ..." />
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <div class="card-footer">
+          <button class="btn btn-primary" type="submit">Оценить</button>
+          <button class="btn" type="reset">Сбросить</button>
+          <span class="small">Результат появится справа.</span>
+        </div>
+      </form>
+    </div>
+
+    <!-- RESULT -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Результат</div>
+          <div class="card-subtitle">Вероятность, решение по порогу и объяснение факторов.</div>
+        </div>
+      </div>
+
+      <div id="submissionResult" class="card-body">
+        <div class="small">Заполните форму слева и нажмите <b>“Оценить”</b>.</div>
+      </div>
+
+      <div class="card-footer">
+        <button class="btn btn-ghost"
+                type="button"
+                data-action="assistant"
+                data-api="/api/assistant/report"
+                data-task="submission_predict"
+                data-context-source="#submissionResult"
+                data-target="#assistantOutSubmission">
+          Пояснить простыми словами
+        </button>
+        <span class="small">Ассистент объяснит результат 1–2 абзацами.</span>
+      </div>
+
+      <div id="assistantOutSubmission" class="card-body">
+        <div class="small">Тут появится пояснение ассистента.</div>
+      </div>
+
+      <details class="card" style="margin-top:12px;">
+        <summary class="mono" style="cursor:pointer; user-select:none;">Технические данные (по желанию)</summary>
+        <pre id="submissionRaw" style="white-space:pre-wrap;">—</pre>
+      </details>
+    </div>
+  </div>
+
+{% endblock %}

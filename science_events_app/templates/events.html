@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% block title %}Каталог · Science Events{% endblock %}
+
+{% block content %}
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title" style="font-size:22px;">Каталог и оценка интереса к мероприятию</div>
+        <div class="card-subtitle">
+          Оценка ожидаемого числа регистраций по характеристикам события — как ориентир для планирования нагрузки.
+        </div>
+      </div>
+      <div class="inline">
+        <span class="badge">Оценка</span>
+        <span class="badge badge-warning">Не гарантия</span>
+      </div>
+    </div>
+
+    {% if not has_event_model %}
+      <div class="card-body">
+        <div class="result">
+          <div class="badge badge-warning">Модель недоступна</div>
+          <div class="small" style="margin-top:10px;">
+            Сейчас модель оценки регистраций не загружена (файл не найден/не читается). Этот раздел временно не считает прогноз.
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="grid grid-2" style="margin-top:18px;">
+    <!-- FORM -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Параметры события</div>
+          <div class="card-subtitle">Заполните то, что знаете. Остальное оставьте по умолчанию.</div>
+        </div>
+      </div>
+
+      <form class="form"
+            id="form-event-forecast"
+            data-kind="event"
+            data-api="/events/predict"
+            data-target="#eventResult">
+
+        <div class="form-row">
+          <div class="field">
+            <label>Название события</label>
+            <input class="input" name="title_clean" placeholder="Например: Ломоносовские чтения-2026" />
+          </div>
+          <div class="field">
+            <label>Формат</label>
+            <select name="format">
+              <option value="">(не задан)</option>
+              <option value="remote_or_hybrid">Онлайн/гибрид</option>
+              <option value="onsite_or_hybrid">Очно/гибрид</option>
+              <option value="onsite">Очно</option>
+              <option value="remote">Онлайн</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>Город</label>
+            <input class="input" name="city" placeholder="Москва, Россия" />
+          </div>
+          <div class="field">
+            <label>Площадка / вуз</label>
+            <input class="input" name="venue" placeholder="МГУ / МУ имени С. Ю. Витте / ..." />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>Онлайн?</label>
+            <select name="is_online_flag" data-type="number">
+              <option value="0">Нет</option>
+              <option value="1">Да</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Бесплатно?</label>
+            <select name="cost_is_free" data-type="number">
+              <option value="0">Нет</option>
+              <option value="1">Да</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>Упоминается взнос?</label>
+            <select name="cost_mentions_fee" data-type="number">
+              <option value="0">Нет</option>
+              <option value="1">Да</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Месяц (1–12)</label>
+            <input class="input" name="event_month" data-type="number" placeholder="например 4" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>День недели старта (0–6)</label>
+            <input class="input" name="event_dow" data-type="number" placeholder="например 2" />
+          </div>
+          <div class="field">
+            <label>Длина описания</label>
+            <input class="input" name="description_len" data-type="number" placeholder="например 900" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>Длительность (дни)</label>
+            <input class="input" name="event_duration_days" data-type="number" placeholder="например 2" />
+          </div>
+          <div class="field">
+            <label>Секций / треков</label>
+            <input class="input" name="tracks_count_clean" data-type="number" placeholder="например 3" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>Ссылок</label>
+            <input class="input" name="n_links" data-type="number" placeholder="например 5" />
+          </div>
+          <div class="field">
+            <label>Календарей</label>
+            <input class="input" name="n_calendar" data-type="number" placeholder="например 1" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>Внешних ссылок</label>
+            <input class="input" name="n_external" data-type="number" placeholder="например 2" />
+          </div>
+          <div class="field">
+            <label>Страниц</label>
+            <input class="input" name="n_pages" data-type="number" placeholder="например 1" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Дедлайн до старта (дней)</label>
+          <input class="input" name="deadline_days_before_event" data-type="number" placeholder="например 30" />
+          <div class="help">Если не знаете — оставьте пустым или 30.</div>
+        </div>
+
+        <div class="card-footer">
+          <button class="btn btn-primary" type="submit" {% if not has_event_model %}disabled{% endif %}>
+            Оценить регистрации
+          </button>
+
+          <button class="btn"
+                  type="button"
+                  data-action="fill-demo"
+                  data-target-form="#form-event-forecast">
+            Заполнить пример
+          </button>
+
+          <span class="small">Результат появится справа.</span>
+        </div>
+      </form>
+    </div>
+
+    <!-- RESULT -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Результат</div>
+          <div class="card-subtitle">Покажем оценку и (если есть) бейзлайн.</div>
+        </div>
+      </div>
+
+      <div id="eventResult" class="card-body">
+        <div class="small">Заполните форму слева и нажмите <b>“Оценить регистрации”</b>.</div>
+      </div>
+
+      <div class="card" style="margin-top:12px;">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Надёжность оценки</div>
+            <div class="card-subtitle">Метрики — честно, но без перегруза.</div>
+          </div>
+        </div>
+
+        {% set m = (metrics or {}).get("event_regcount_forecast", {}) %}
+        <div class="kpi">
+          <div class="kpi-item">
+            <div class="kpi-label">Средняя ошибка (MAE)</div>
+            <div class="kpi-value">{{ m.get("ridge", {}).get("mae", "—") }}</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-label">RMSE</div>
+            <div class="kpi-value">{{ m.get("ridge", {}).get("rmse", "—") }}</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-label">R²</div>
+            <div class="kpi-value">{{ m.get("ridge", {}).get("r2", "—") }}</div>
+          </div>
+        </div>
+
+        <div class="small" style="margin-top:12px;">
+          Для точного планирования лучше использовать эту оценку как стартовую точку и дополнять контекстом:
+          рассылки, известность события, партнёры, аудитория, сезонность.
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Главная · Science Events{% endblock %}
+
+{% block content %}
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title" style="font-size:22px;">Планируйте участие в научных мероприятиях</div>
+        <div class="card-subtitle">
+          Сервис помогает сориентироваться по мероприятиям, оценить спрос и понять шансы принятия заявки —
+          простым языком, без технических деталей.
+        </div>
+      </div>
+      <div class="inline">
+        <span class="badge">Понятно</span>
+        <span class="badge">Быстро</span>
+        <span class="badge">С объяснениями</span>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <div class="grid grid-3" style="margin-top:10px;">
+        <div class="card">
+          <div class="card-title">Каталог и оценка интереса</div>
+          <p class="small">
+            Для организаторов и координаторов: оценка ожидаемых регистраций по параметрам события.
+          </p>
+          <div class="card-footer">
+            <a class="btn btn-primary" href="{{ url_for('page_events') }}">Открыть каталог</a>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Оценить шанс принятия</div>
+          <p class="small">
+            Для автора заявки: аккуратная оценка “скорее примут/скорее не примут” + объяснение факторов.
+          </p>
+          <div class="card-footer">
+            <a class="btn btn-primary" href="{{ url_for('page_submission') }}">Оценить заявку</a>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Для МУИВ</div>
+          <p class="small">
+            Проверка, относится ли мероприятие к “фокусным” для университета, и почему.
+          </p>
+          <div class="card-footer">
+            <a class="btn btn-primary" href="{{ url_for('page_focus') }}">Проверить событие</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px;">
+        <div class="card-title">Как пользоваться</div>
+        <div class="grid grid-3" style="margin-top:10px;">
+          <div class="card">
+            <div class="badge">Шаг 1</div>
+            <p class="small" style="margin-top:10px;">
+              Выберите раздел: каталог, оценка заявки или проверка “фокуса”.
+            </p>
+          </div>
+          <div class="card">
+            <div class="badge">Шаг 2</div>
+            <p class="small" style="margin-top:10px;">
+              Заполните только то, что знаете. Неизвестные поля можно оставить пустыми.
+            </p>
+          </div>
+          <div class="card">
+            <div class="badge">Шаг 3</div>
+            <p class="small" style="margin-top:10px;">
+              Получите результат и пояснение. Детали и ограничения — в разделе “О сервисе”.
+            </p>
+          </div>
+        </div>
+
+        <div class="result" style="margin-top:12px;">
+          <div class="badge badge-warning">Важно</div>
+          <div class="small" style="margin-top:10px;">
+            Любая оценка — это ориентир. Итоговые решения принимаются организаторами мероприятий и комиссиями.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}

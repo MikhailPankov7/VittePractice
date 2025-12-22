@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}О сервисе · Science Events{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <h1>О сервисе</h1>
+  <p>
+    Science Events — это помощник для работы с научными мероприятиями:
+    каталог/ориентиры по интересу, оценка заявки и проверка “фокуса” для МУИВ.
+    Результаты — подсказки, а не “гарантии”.
+  </p>
+
+  <div class="grid">
+    <div class="card" style="grid-column: span 4;">
+      <h2>Каталог и оценка интереса</h2>
+      <p class="small">
+        В разделе “Каталог” можно оценить ожидаемое число регистраций по параметрам мероприятия.
+        Это удобно для планирования ресурсов.
+      </p>
+    </div>
+
+    <div class="card" style="grid-column: span 4;">
+      <h2>Оценить заявку</h2>
+      <p class="small">
+        В разделе “Оценить заявку” сервис показывает вероятность принятия
+        и кратко объясняет, какие факторы повлияли на результат.
+      </p>
+    </div>
+
+    <div class="card" style="grid-column: span 4;">
+      <h2>Для МУИВ</h2>
+      <p class="small">
+        Проверка “фокусного” события сделана максимально прозрачно:
+        важна понятность причин, а не сложность модели.
+      </p>
+    </div>
+
+    <div class="card" style="grid-column: span 12;">
+      <h2>Как читать результаты</h2>
+      <div class="row">
+        <div class="col-4">
+          <div class="pill">Вероятность</div>
+          <p class="small" style="margin-top:8px;">
+            Проценты — это оценка уверенности модели, а не обещание исхода.
+          </p>
+        </div>
+        <div class="col-4">
+          <div class="pill">Порог</div>
+          <p class="small" style="margin-top:8px;">
+            Для решения “да/нет” используется порог, подобранный заранее. Его показываем явно.
+          </p>
+        </div>
+        <div class="col-4">
+          <div class="pill">Объяснение</div>
+          <p class="small" style="margin-top:8px;">
+            Мы стараемся объяснять результат “по-человечески”: ключевые факторы + текст ассистента.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="grid-column: span 12;">
+      <h2>ИИ-ассистент</h2>
+      <p class="small">
+        Ассистент (ProxyAPI) не принимает решение вместо модели.
+        Он получает готовый результат (JSON) и превращает его в понятное объяснение:
+        что означает вывод, где ограничения, что проверить в первую очередь.
+      </p>
+    </div>
+
+    <div class="card" style="grid-column: span 12;">
+      <h2>Метрики и надёжность</h2>
+      <p class="small">
+        Метрики важны, но обычному пользователю важнее понятный вывод.
+        Поэтому основные числа — в “сжатом” виде, детали при желании можно раскрыть.
+      </p>
+
+      {% set ms = metrics or {} %}
+      <details class="card" style="margin-top:12px;">
+        <summary class="mono" style="cursor:pointer; user-select:none;">Показать метрики (из metrics_stage7.json)</summary>
+
+        <div class="row" style="margin-top:12px;">
+          {% set sub = ms.get("submission_decision", {}) %}
+          <div class="col-4">
+            <div class="kpi">
+              <div>
+                <div class="value">{{ sub.get("roc_auc", "—") }}</div>
+                <div class="sub">Submission ROC-AUC</div>
+              </div>
+              <span class="pill">чем выше, тем лучше</span>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="kpi">
+              <div>
+                <div class="value">{{ sub.get("pr_auc", "—") }}</div>
+                <div class="sub">Submission PR-AUC</div>
+              </div>
+              <span class="pill">чем выше, тем лучше</span>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="kpi">
+              <div>
+                <div class="value">{{ sub.get("f1", "—") }}</div>
+                <div class="sub">Submission F1</div>
+              </div>
+              <span class="pill">ориентир</span>
+            </div>
+          </div>
+        </div>
+
+        {% set ev = ms.get("event_regcount_forecast", {}) %}
+        <div class="row" style="margin-top:12px;">
+          <div class="col-4">
+            <div class="kpi">
+              <div>
+                <div class="value">{{ ev.get("ridge", {}).get("mae", "—") }}</div>
+                <div class="sub">Reg_count MAE</div>
+              </div>
+              <span class="pill">меньше — лучше</span>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="kpi">
+              <div>
+                <div class="value">{{ ev.get("ridge", {}).get("rmse", "—") }}</div>
+                <div class="sub">Reg_count RMSE</div>
+              </div>
+              <span class="pill">меньше — лучше</span>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="kpi">
+              <div>
+                <div class="value">{{ ev.get("ridge", {}).get("r2", "—") }}</div>
+                <div class="sub">Reg_count R²</div>
+              </div>
+              <span class="pill">выше — лучше</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="small" style="margin-top:12px;">
+          Примечание: часть задач проще и стабильнее (например, решение по заявке),
+          часть — скорее ориентир (прогноз регистраций).
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+{% endblock %}
