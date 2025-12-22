@@ -1,0 +1,89 @@
+{
+  "dataset": {
+    "events_total": 714,
+    "submissions_total": 19003,
+    "generated_from": "science_events_dataset_processed.zip",
+    "note": "Метрики получены на разбиениях по event_id (submission) и по времени (events)."
+  },
+  "submission_decision": {
+    "task": "predict_submission_acceptance",
+    "split": {
+      "by": "event_id",
+      "train_rows": 12009,
+      "val_rows": 2826,
+      "test_rows": 4168,
+      "accept_share": {
+        "train": 0.6612540594554085,
+        "val": 0.6659589525831564,
+        "test": 0.6557101727447217
+      }
+    },
+    "metrics_test": {
+      "roc_auc": 0.893,
+      "pr_auc": 0.94,
+      "threshold": 0.65,
+      "f1_at_threshold": 0.856,
+      "confusion_matrix": {
+        "tn": 1122,
+        "fp": 313,
+        "fn": 455,
+        "tp": 2278
+      }
+    },
+    "artifacts": {
+      "model": "submission_decision_model.joblib",
+      "threshold_json": "submission_decision_threshold.json",
+      "split_json": "submission_split.json",
+      "plots": [
+        "roc_submission.png",
+        "pr_submission.png",
+        "f1_vs_threshold_submission.png"
+      ],
+      "extra_metrics_json": "submission_metrics.json"
+    }
+  },
+  "event_regcount_forecast": {
+    "task": "forecast_event_reg_count",
+    "split": {
+      "by": "time",
+      "cut_date": "2025-11-26",
+      "train_events": 569,
+      "test_events": 145
+    },
+    "metrics_test": {
+      "baseline_mean": {
+        "mae": 35.32,
+        "rmse": 39.74,
+        "r2": -0.019
+      },
+      "ridge_model": {
+        "mae": 37.03,
+        "rmse": 42.75,
+        "r2": -0.179
+      }
+    },
+    "artifacts": {
+      "model": "event_regcount_forecast_model.joblib",
+      "config_json": "event_regcount_forecast_config.json"
+    },
+    "note": "Если Ridge хуже baseline — это честный сигнал: текущие event-признаки слабо объясняют reg_count. Для веба лучше показывать baseline и предупреждение о неопределённости."
+  },
+  "focus_rule": {
+    "task": "detect_focus_university_event",
+    "positives_predicted": 11,
+    "metrics_vs_label_is_focus_university": {
+      "precision": 1.0,
+      "recall": 0.917,
+      "f1": 0.957,
+      "confusion_matrix": {
+        "tn": 702,
+        "fp": 0,
+        "fn": 1,
+        "tp": 11
+      }
+    },
+    "artifacts": {
+      "rule_json": "focus_rule.json"
+    }
+  }
+}
