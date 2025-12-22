@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}Science Events{% endblock %}</title>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <script defer src="{{ url_for('static', filename='app.js') }}"></script>
+
+  {% block head_extra %}{% endblock %}
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="{{ url_for('page_index') }}">
+        <span class="brand-badge" aria-hidden="true"></span>
+        <span>
+          Science Events
+          <span class="small" style="display:block; margin-top:2px;">поиск мероприятий и помощь с заявками</span>
+        </span>
+      </a>
+
+      <nav class="nav" aria-label="Навигация">
+        <a href="{{ url_for('page_index') }}" class="{% if request.path == '/' %}active{% endif %}">Главная</a>
+        <a href="{{ url_for('page_events') }}" class="{% if request.path.startswith('/events') %}active{% endif %}">Каталог</a>
+        <a href="{{ url_for('page_submission') }}" class="{% if request.path.startswith('/submission') %}active{% endif %}">Оценить заявку</a>
+        <a href="{{ url_for('page_focus') }}" class="{% if request.path.startswith('/focus') %}active{% endif %}">Для МУИВ</a>
+        <a href="{{ url_for('page_methodology') }}" class="{% if request.path.startswith('/methodology') %}active{% endif %}">О сервисе</a>
+      </nav>
+
+      <div class="actions">
+        <button class="btn btn-sm btn-ghost" type="button" data-action="toggle-theme">
+          Тема
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, msg in messages %}
+          {% set badge = '' %}
+          {% if category == 'ok' %}{% set badge = 'badge-success' %}{% endif %}
+          {% if category == 'warn' %}{% set badge = 'badge-warning' %}{% endif %}
+          {% if category == 'bad' %}{% set badge = 'badge-danger' %}{% endif %}
+
+          <div class="result" style="margin-bottom:12px;">
+            <div class="badge {{ badge }}">{{ msg }}</div>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="container footer">
+    <div class="inline" style="justify-content:space-between;">
+      <div>
+        <b>Science Events</b> · подсказки и оценки для планирования участия
+        <span class="small">· рекомендации не являются гарантией результата</span>
+      </div>
+      <div class="mono">
+        {% if metrics and metrics.get('build') %}
+          build: {{ metrics.get('build') }}
+        {% else %}
+          build: local
+        {% endif %}
+      </div>
+    </div>
+  </footer>
+
+  {% block body_extra %}{% endblock %}
+</body>
+</html>
