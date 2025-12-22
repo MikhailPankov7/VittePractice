@@ -1,0 +1,39 @@
+{
+  "task": "event_regcount_forecast",
+  "cut_date": "2025-11-26 00:00:00",
+  "features": {
+    "numeric": [
+      "event_duration_days",
+      "description_len",
+      "deadline_days_before_event",
+      "n_links",
+      "n_external",
+      "n_pages",
+      "tracks_count_clean",
+      "cost_is_free",
+      "cost_mentions_fee"
+    ],
+    "categorical": [
+      "city",
+      "venue",
+      "format",
+      "event_month",
+      "event_dow",
+      "is_online_flag",
+      "has_tracks_clean"
+    ],
+    "text": "title_clean"
+  },
+  "metrics_test": {
+    "baseline": {
+      "mae": 35.32404096721411,
+      "rmse": 39.73748562504489,
+      "r2": -0.01855024072245648
+    },
+    "ridge": {
+      "mae": 37.029444756078824,
+      "rmse": 42.75227942136297,
+      "r2": -0.1789631693286986
+    }
+  }
+}
