@@ -2,15 +2,7 @@
 """
 Science Events Web App
 
-Ключевые фиксы:
-- модели sklearn ожидают некоторые колонки, которых нет в веб-вводе (например text_all, has_tracks_clean)
-- теперь мы:
-  1) пытаемся извлечь список ожидаемых колонок из ColumnTransformer внутри Pipeline,
-  2) добавляем недостающие колонки дефолтами,
-  3) вычисляем вычисляемые признаки (text_all, has_tracks_clean),
-  4) не падаем из-за пропусков.
-
-Эндпоинты под текущие шаблоны:
+Endpoints:
 - GET  /                    -> page_index
 - GET  /events              -> page_events
 - POST /events/predict       -> api_events_predict
@@ -37,7 +29,7 @@ from flask import Flask, render_template, request, jsonify
 from werkzeug.exceptions import HTTPException
 
 # ---------------------------------------------------------------------
-# Compatibility helper for joblib unpickle (если модель сохранялась из __main__)
+# Compatibility helper for joblib unpickle
 # ---------------------------------------------------------------------
 def _ravel(x):
     return np.ravel(x)
@@ -58,7 +50,6 @@ try:
 except Exception:
     OpenAI = None
 
-
 BASE_DIR = Path(__file__).resolve().parent
 
 ARTIFACTS_DIR = BASE_DIR / "artifacts_stage7"
@@ -75,7 +66,6 @@ if load_dotenv is not None:
     env_path = BASE_DIR / ".env"
     if env_path.exists():
         load_dotenv(str(env_path))
-
 
 # ---------------------------------------------------------------------
 # Helpers: load
@@ -104,16 +94,14 @@ def _safe_joblib_load(path: Path):
 
 
 def _coerce_pdna_to_none(v: Any) -> Any:
-    """Убираем pd.NA/NaN так, чтобы дальше не спотыкались."""
     if v is pd.NA:
         return None
     if isinstance(v, float) and math.isnan(v):
         return None
     return v
 
-
 # ---------------------------------------------------------------------
-# Introspection: какие колонки ждёт модель
+# Introspection: expected columns
 # ---------------------------------------------------------------------
 def _normalize_cols(cols_sel: Any) -> List[str]:
     if cols_sel is None:
@@ -122,21 +110,17 @@ def _normalize_cols(cols_sel: Any) -> List[str]:
         return [cols_sel]
     if isinstance(cols_sel, (list, tuple, set, np.ndarray, pd.Index)):
         return [str(x) for x in list(cols_sel)]
-    # если это slice/boolean mask/callable selector — не можем надёжно извлечь
     return []
-
-
+  
 def _has_vectorizer(obj: Any) -> bool:
     name = obj.__class__.__name__.lower()
     if "tfidfvectorizer" in name or "countvectorizer" in name:
         return True
     return False
 
-
 def _guess_kind(transformer: Any, name: str) -> str:
     """
     kind: "num" | "cat" | "text"
-    Пытаемся угадать по названию ветки и по типам шагов.
     """
     lname = (name or "").lower()
     if "text" in lname or "tfidf" in lname:
@@ -146,7 +130,7 @@ def _guess_kind(transformer: Any, name: str) -> str:
     if "num" in lname or "scaler" in lname:
         return "num"
 
-    # transformer может быть Pipeline со steps
+    # transformer maybe Pipeline with steps
     steps = []
     if hasattr(transformer, "steps"):
         try:
@@ -163,7 +147,7 @@ def _guess_kind(transformer: Any, name: str) -> str:
         if "standardscaler" in cls or "minmaxscaler" in cls:
             return "num"
 
-    # одиночный трансформер
+    # single трансформер
     if transformer is None:
         return "cat"
     if _has_vectorizer(transformer):
@@ -171,12 +155,11 @@ def _guess_kind(transformer: Any, name: str) -> str:
     cls = transformer.__class__.__name__.lower()
     if "onehotencoder" in cls:
         return "cat"
-    # по умолчанию безопаснее числом (для passthrough числовых веток)
     return "num"
 
 
 def _find_column_transformer(model: Any) -> Optional[Any]:
-    """Ищем ColumnTransformer внутри Pipeline."""
+    """Seek ColumnTransformer inside Pipeline."""
     if model is None:
         return None
     # Pipeline?
@@ -189,11 +172,10 @@ def _find_column_transformer(model: Any) -> Optional[Any]:
         return model
     return None
 
-
 def _model_input_spec(model: Any) -> Tuple[List[str], Dict[str, str]]:
     """
-    Возвращает:
-      cols: список ожидаемых колонок
+    Return:
+      cols: list of expected columns
       kinds: dict col -> kind ("num"/"cat"/"text")
     """
     cols_set = set()
@@ -229,7 +211,6 @@ def _model_input_spec(model: Any) -> Tuple[List[str], Dict[str, str]]:
         try:
             for c in list(model.feature_names_in_):
                 cols_set.add(str(c))
-                # тип не знаем — пусть будет cat/text
                 kinds[str(c)] = "cat"
         except Exception:
             pass
@@ -275,7 +256,7 @@ def _build_text_all_from_row(row: Dict[str, Any]) -> str:
 
 def _apply_computed_columns(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Добавляем/пересчитываем вычисляемые колонки, если они присутствуют в df.
+    Add/count calculable columns, if they are inside df.
     """
     # has_tracks_clean = (tracks_count_clean > 0)
     if "has_tracks_clean" in df.columns:
@@ -300,10 +281,6 @@ def _build_X_for_model(
     raw: Dict[str, Any],
     fallback_schema: Optional[Dict[str, str]] = None
 ) -> pd.DataFrame:
-    """
-    Собираем DataFrame ровно под то, что ждёт модель.
-    Если интроспекция не дала колонок — используем fallback_schema.
-    """
     cols, kinds = _model_input_spec(model)
 
     if not cols:
@@ -320,11 +297,11 @@ def _build_X_for_model(
 
     df = pd.DataFrame([row])
 
-    # вычисляем derived признаки (если такие колонки есть)
+    # calculate derived features
     df = _apply_computed_columns(df)
 
-    # гарантия: если computed создал новые колонки, но модель ждёт их — ок.
-    # если модель ждёт колонку, а она всё равно не появилась — добавим дефолт
+    # ok if computed created new columns and model expects it
+    # if model expects column and it's not appear, add default
     for c in cols:
         if c not in df.columns:
             df[c] = _default_for_kind(kinds.get(c, "cat"))
@@ -353,7 +330,7 @@ FOCUS_RULE: Dict[str, Any] = _load_json(FOCUS_RULE_PATH, default={})
 SUBMISSION_MODEL = _safe_joblib_load(SUBMISSION_MODEL_PATH)
 EVENT_MODEL = _safe_joblib_load(EVENT_MODEL_PATH)
 
-# fallback schemas (если интроспекция не сработает)
+# fallback schemas
 FALLBACK_EVENT_SCHEMA = EVENT_FORECAST_CONFIG.get("schema_cols")
 if not isinstance(FALLBACK_EVENT_SCHEMA, dict) or not FALLBACK_EVENT_SCHEMA:
     FALLBACK_EVENT_SCHEMA = {
@@ -374,12 +351,10 @@ if not isinstance(FALLBACK_EVENT_SCHEMA, dict) or not FALLBACK_EVENT_SCHEMA:
         "n_external": "num",
         "n_pages": "num",
         "deadline_days_before_event": "num",
-        # частая причина падения у тебя:
         "has_tracks_clean": "num",
     }
 
 FALLBACK_SUB_SCHEMA = {
-    # частая причина падения у тебя:
     "text_all": "text",
 
     "title_clean": "text",
@@ -407,7 +382,6 @@ FALLBACK_SUB_SCHEMA = {
     "conf_mean": "num",
 }
 
-
 # ---------------------------------------------------------------------
 # ProxyAPI assistant
 # ---------------------------------------------------------------------
@@ -423,7 +397,6 @@ def _get_ai_client() -> Optional[Any]:
     except Exception as e:
         app.logger.exception("Failed to init OpenAI client: %s", e)
         return None
-
 
 def _ask_assistant(prompt: str) -> str:
     client = _get_ai_client()
@@ -601,7 +574,7 @@ def api_submission_predict():
         return jsonify({"ok": False, "error": "predict_failed", "detail": str(e)})
 
 
-# backward compatibility (если где-то осталось старое)
+# backward compatibility
 @app.post("/submission/predict")
 def api_submission_predict_compat():
     return api_submission_predict()
@@ -635,35 +608,27 @@ def api_focus_check():
         "rule": {"venue_keyword": venue_key, "city_keyword": city_key},
     })
 
-
-# Заглушка: check_by_id будет работать только если ты добавишь индекс событий в артефакты
 @app.post("/api/focus/check_by_id")
 def api_focus_check_by_id():
     payload = request.json or {}
     event_id = str(payload.get("event_id", "") or "").strip()
     if not event_id:
         return jsonify({"ok": False, "error": "empty_event_id"})
-
-    # Если позже добавишь файл, можно поднять отсюда.
-    # Сейчас честно возвращаем понятную ошибку.
     return jsonify({"ok": False, "error": "events_index_not_found", "detail": "Нет индекса событий в artifacts (events_index.*)"})
-
 
 # backward compatibility
 @app.post("/focus/check")
 def api_focus_check_compat():
     return api_focus_check()
 
-
 # ---------------------------------------------------------------------
-# API: Assistant report (то, что вызывают твои шаблоны)
+# API: Assistant report
 # ---------------------------------------------------------------------
 @app.post("/api/assistant/report")
 def api_assistant_report():
     payload = request.json or {}
 
     ctx = payload.get("context", "")
-    # у тебя в разных местах context бывает строкой JSON или объектом
     if isinstance(ctx, (dict, list)):
         ctx_text = json.dumps(ctx, ensure_ascii=False, indent=2)
     else:
@@ -680,7 +645,6 @@ def api_assistant_report():
 
     report = _ask_assistant(prompt)
     return jsonify({"ok": True, "report": report})
-
 
 # ---------------------------------------------------------------------
 # Local run
